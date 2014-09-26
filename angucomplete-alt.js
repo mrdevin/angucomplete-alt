@@ -243,6 +243,7 @@ angular.module('angucomplete-alt', [] ).directive('angucompleteAlt', ['$q', '$pa
             scope.$apply(function() {
               scope.currentIndex ++;
             });
+            elem[0].querySelectorAll('.angucomplete-row')[scope.currentIndex].scrollIntoView(false);
           }
         } else if (which === KEY_UP && scope.results) {
           event.preventDefault();
@@ -250,6 +251,7 @@ angular.module('angucomplete-alt', [] ).directive('angucompleteAlt', ['$q', '$pa
             scope.$apply(function() {
               scope.currentIndex --;
             });
+            elem[0].querySelectorAll('.angucomplete-row')[scope.currentIndex].scrollIntoView(false);
           }
         } else if (which === KEY_TAB && scope.results && scope.results.length > 0) {
           if (scope.currentIndex === -1 && scope.showDropdown) {
