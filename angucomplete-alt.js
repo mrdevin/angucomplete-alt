@@ -89,6 +89,7 @@ angular.module('angucomplete-alt', [] ).directive('angucompleteAlt', ['$q', '$pa
       var responseFormatter;
       var validState = null;
       var httpCanceller = null;
+      var dd = null;
 
       scope.currentIndex = null;
       scope.searching = false;
@@ -226,8 +227,25 @@ angular.module('angucomplete-alt', [] ).directive('angucompleteAlt', ['$q', '$pa
         }
       }
 
+      function getRowOffsetHeight() {
+        var row = elem[0].querySelector('.angucomplete-row');
+        var css = getComputedStyle(row);
+        return row.offsetHeight + parseInt(css.marginTop) + parseInt(css.marginBottom);
+      }
+
+      function getDropdownMaxHeight() {
+        if (!dd) { dd = elem[0].querySelector('.angucomplete-dropdown'); }
+        return parseInt(getComputedStyle(dd).maxHeight);
+      }
+
+      function setDropdownScrollTop(offset) {
+        if (!dd) { dd = elem[0].querySelector('.angucomplete-dropdown'); }
+        dd.scrollTop = dd.scrollTop + offset;
+      }
+
       function keydownHandler(event) {
         var which = ie8EventNormalizer(event);
+        var rowOffsetHeight = null;
         if (which === KEY_EN && scope.results) {
           if (scope.currentIndex >= 0 && scope.currentIndex < scope.results.length) {
             event.preventDefault();
@@ -243,7 +261,10 @@ angular.module('angucomplete-alt', [] ).directive('angucompleteAlt', ['$q', '$pa
             scope.$apply(function() {
               scope.currentIndex ++;
             });
-            elem[0].querySelectorAll('.angucomplete-row')[scope.currentIndex].scrollIntoView(false);
+            rowOffsetHeight = getRowOffsetHeight();
+            if ((scope.currentIndex + 1) * rowOffsetHeight > getDropdownMaxHeight()) {
+              setDropdownScrollTop(rowOffsetHeight);
+            }
           }
         } else if (which === KEY_UP && scope.results) {
           event.preventDefault();
@@ -251,7 +272,10 @@ angular.module('angucomplete-alt', [] ).directive('angucompleteAlt', ['$q', '$pa
             scope.$apply(function() {
               scope.currentIndex --;
             });
-            elem[0].querySelectorAll('.angucomplete-row')[scope.currentIndex].scrollIntoView(false);
+            rowOffsetHeight = getRowOffsetHeight();
+            if ((scope.currentIndex + 2) * rowOffsetHeight > getDropdownMaxHeight()) {
+              setDropdownScrollTop(-rowOffsetHeight);
+            }
           }
         } else if (which === KEY_TAB && scope.results && scope.results.length > 0) {
           if (scope.currentIndex === -1 && scope.showDropdown) {
@@ -313,6 +337,9 @@ angular.module('angucomplete-alt', [] ).directive('angucompleteAlt', ['$q', '$pa
         scope.showDropdown = true;
         scope.currentIndex = -1;
         scope.results = [];
+        if (dd) {
+          dd.scrollTop = 0;
+        }
       }
 
       function getLocalResults(str) {
