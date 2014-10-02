@@ -65,10 +65,10 @@ angular.module('angucomplete-alt', [] ).directive('angucompleteAlt', ['$q', '$pa
     template:
       '<div class="angucomplete-holder">' +
       '  <input id="{{id}}_value" ng-model="searchStr" ng-disabled="disableInput" type="text" placeholder="{{placeholder}}" ng-focus="onFocusHandler()" class="{{inputClass}}" ng-focus="resetHideResults()" ng-blur="hideResults()" autocapitalize="off" autocorrect="off" autocomplete="off" ng-change="inputChangeHandler(searchStr)"/>' +
-      '  <div id="{{id}}_dropdown" class="angucomplete-dropdown" ng-if="showDropdown">' +
+      '  <div id="{{id}}_dropdown" class="angucomplete-dropdown" ng-show="showDropdown">' +
       '    <div class="angucomplete-searching" ng-show="searching" ng-bind="textSearching"></div>' +
       '    <div class="angucomplete-searching" ng-show="!searching && (!results || results.length == 0)" ng-bind="textNoResults"></div>' +
-      '    <div class="angucomplete-row" ng-repeat="result in results" ng-click="selectResult(result)" ng-mouseover="hoverRow($index)" ng-class="{\'angucomplete-selected-row\': $index == currentIndex}">' +
+      '    <div class="angucomplete-row" ng-repeat="result in results" ng-click="selectResult(result)" ng-mouseenter="hoverRow($index)" ng-class="{\'angucomplete-selected-row\': $index == currentIndex}">' +
       '      <div ng-if="imageField" class="angucomplete-image-holder">' +
       '        <img ng-if="result.image && result.image != \'\'" ng-src="{{result.image}}" class="angucomplete-image"/>' +
       '        <div ng-if="!result.image && result.image != \'\'" class="angucomplete-image-default"></div>' +
@@ -227,8 +227,7 @@ angular.module('angucomplete-alt', [] ).directive('angucompleteAlt', ['$q', '$pa
         }
       }
 
-      function getRowOffsetHeight() {
-        var row = elem[0].querySelector('.angucomplete-row');
+      function getRowOffsetHeight(row) {
         var css = getComputedStyle(row);
         return row.offsetHeight + parseInt(css.marginTop) + parseInt(css.marginBottom);
       }
@@ -241,6 +240,7 @@ angular.module('angucomplete-alt', [] ).directive('angucompleteAlt', ['$q', '$pa
       function setDropdownScrollTop(offset) {
         if (!dd) { dd = elem[0].querySelector('.angucomplete-dropdown'); }
         dd.scrollTop = dd.scrollTop + offset;
+        console.log(dd.scrollTop);
       }
 
       function keydownHandler(event) {
@@ -257,12 +257,20 @@ angular.module('angucomplete-alt', [] ).directive('angucompleteAlt', ['$q', '$pa
           scope.$apply();
         } else if (which === KEY_DW && scope.results) {
           event.preventDefault();
+          if (dd) {
+            console.log(dd.scrollTop);
+          }
           if ((scope.currentIndex + 1) < scope.results.length) {
             scope.$apply(function() {
               scope.currentIndex ++;
             });
-            rowOffsetHeight = getRowOffsetHeight();
-            if ((scope.currentIndex + 1) * rowOffsetHeight > getDropdownMaxHeight()) {
+            var rows = elem[0].querySelectorAll('.angucomplete-row');
+            var r = rows[scope.currentIndex];
+            rowOffsetHeight = getRowOffsetHeight(r);
+            console.log('d', rowOffsetHeight, scope.currentIndex, getDropdownMaxHeight(), r.offsetTop);
+            //if ((scope.currentIndex + 1) * rowOffsetHeight > getDropdownMaxHeight()) {
+            //if ((rowOffsetHeight + rows[scope.currentIndex].offsetTop)> getDropdownMaxHeight()) {
+            if ((dd.getBoundingClientRect().top + getDropdownMaxHeight()) < r.getBoundingClientRect().bottom) {
               setDropdownScrollTop(rowOffsetHeight);
             }
           }
@@ -272,9 +280,15 @@ angular.module('angucomplete-alt', [] ).directive('angucompleteAlt', ['$q', '$pa
             scope.$apply(function() {
               scope.currentIndex --;
             });
-            rowOffsetHeight = getRowOffsetHeight();
-            if ((scope.currentIndex + 2) * rowOffsetHeight > getDropdownMaxHeight()) {
-              setDropdownScrollTop(-rowOffsetHeight);
+            var rows = elem[0].querySelectorAll('.angucomplete-row');
+            var r = rows[scope.currentIndex];
+            rowOffsetHeight = getRowOffsetHeight(r);
+            console.log('u', rowOffsetHeight, scope.currentIndex, getDropdownMaxHeight(), r.offsetTop);
+            console.log(r.offsetTop, r.scrollTop, r.getBoundingClientRect().top, dd.getBoundingClientRect().top);
+            //if ((scope.currentIndex + 2) * rowOffsetHeight > getDropdownMaxHeight()) {
+            if (r.getBoundingClientRect().top - dd.getBoundingClientRect().top < 0) {
+              //setDropdownScrollTop(-rowOffsetHeight);
+              setDropdownScrollTop(r.getBoundingClientRect().top - dd.getBoundingClientRect().top);
             }
           }
         } else if (which === KEY_TAB && scope.results && scope.results.length > 0) {
@@ -338,6 +352,7 @@ angular.module('angucomplete-alt', [] ).directive('angucompleteAlt', ['$q', '$pa
         scope.currentIndex = -1;
         scope.results = [];
         if (dd) {
+          console.log('clear');
           dd.scrollTop = 0;
         }
       }
