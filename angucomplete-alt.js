@@ -286,9 +286,9 @@ angular.module('angucomplete-alt', [] ).directive('angucompleteAlt', ['$q', '$pa
             console.log('u', rowOffsetHeight, scope.currentIndex, getDropdownMaxHeight(), r.offsetTop);
             console.log(r.offsetTop, r.scrollTop, r.getBoundingClientRect().top, dd.getBoundingClientRect().top);
             //if ((scope.currentIndex + 2) * rowOffsetHeight > getDropdownMaxHeight()) {
-            if (r.getBoundingClientRect().top - dd.getBoundingClientRect().top < 0) {
+            if (r.getBoundingClientRect().top - (dd.getBoundingClientRect().top + parseInt(getComputedStyle(dd).paddingTop)) < 0) {
               //setDropdownScrollTop(-rowOffsetHeight);
-              setDropdownScrollTop(r.getBoundingClientRect().top - dd.getBoundingClientRect().top);
+              setDropdownScrollTop(r.getBoundingClientRect().top - (dd.getBoundingClientRect().top + parseInt(getComputedStyle(dd).paddingTop)));
             }
           }
         } else if (which === KEY_TAB && scope.results && scope.results.length > 0) {
@@ -345,16 +345,20 @@ angular.module('angucomplete-alt', [] ).directive('angucompleteAlt', ['$q', '$pa
       function clearResults() {
         scope.showDropdown = false;
         scope.results = [];
+        if (dd) {
+          console.log('clearResults');
+          dd.scrollTop = 0;
+        }
       }
 
       function initResults() {
+        if (dd) {
+          console.log('initResults');
+          dd.scrollTop = 0;
+        }
         scope.showDropdown = true;
         scope.currentIndex = -1;
         scope.results = [];
-        if (dd) {
-          console.log('clear');
-          dd.scrollTop = 0;
-        }
       }
 
       function getLocalResults(str) {
